@@ -294,7 +294,6 @@ def store_face_tensors(faces, path_to_store, filename, temporal=False):
     this will need to be edited for the temporal version
     """
 
-    # here we also unsqueeze  the tensors
     if not os.path.exists(path_to_store):
         os.makedirs(path_to_store)
 
