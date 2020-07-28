@@ -29,6 +29,7 @@ Due to data non-distribution agreement, no data is available in this repository.
 
 1. Celeb-DF (can be downloaded via https://github.com/danmohaha/celeb-deepfakeforensics)
 2. DeeperForensics-1.0 (can be downloaded via https://github.com/EndlessSora/DeeperForensics-1.0/tree/master/dataset)
+3. FaceForensics ++ (can be downloaded via https://github.com/ondyari/FaceForensics)
 
 Once the data is downloaded, follow the steps in the data_extraction notebook. This will create two new folders holding the Labels and extracted data.
 For the image- and video-based models, different types of datasets need to be created. Note: the video-based dataset stores the datapoints as pickled tensors, which significantly
