@@ -19,7 +19,7 @@ N. Again, the file-level prediction is derived by averaging all of the frame-win
 ## Setting up
 Clone repository and set up environment by:
 
-<pre><code>conda create --name DeepfakeForensics --file requirements.txt
+<pre><code>$pip install -r requirements.txt
 </code></pre>
 
 Created on Python 3.7 Win 10.
