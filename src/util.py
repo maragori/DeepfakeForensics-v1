@@ -1162,13 +1162,11 @@ def plot_sample_images_nopred(samples):
     plt.show()
 
 
-def initialize_model(model_class, path_to_model=None, pretrained=True, epoch=None, run=0,
-                     converged=True, gradcam_mode=False, device=None, dropout=0.5):
-
-    if epoch is None and not converged:
-        assert False, 'If not converged, must specify epoch checkpoint'
+def initialize_model(model_class, path_to_model=None, pretrained=True, epoch=None,
+                     device=None, dropout=0.5, gradcam_mode=False):
 
     assert path_to_model is not None or not pretrained, 'Trying to load pretrained model from path, but no path is specified'
+    assert not pretrained or epoch is not None, 'To load pretrained model, specify a checkpoint'
 
     if model_class == 'effb3':
         model = EfficientNet.from_name('efficientnet-b3',
@@ -1179,7 +1177,6 @@ def initialize_model(model_class, path_to_model=None, pretrained=True, epoch=Non
                                        }
                                        )
         temporal = False
-        if converged: epoch = 14
     elif model_class == 'effb0':
         model = EfficientNet.from_name('efficientnet-b0',
                                        override_params={
@@ -1189,11 +1186,9 @@ def initialize_model(model_class, path_to_model=None, pretrained=True, epoch=Non
                                        }
                                        )
         temporal = False
-        if converged: epoch = 14
     elif model_class == 'meso4':
         model = MesoNet4()
         temporal = False
-        if converged: epoch = 29
     elif model_class == 'effb3LSTM':
         model = EfficientLSTM(efficientnet_name='efficientnet-b3',
                               seq_len=5,
@@ -1203,7 +1198,6 @@ def initialize_model(model_class, path_to_model=None, pretrained=True, epoch=Non
                               cnn_checkpoint=False,
                               gradcam_mode=gradcam_mode)
         temporal = True
-        if converged: epoch = 14
     elif model_class == 'effb0LSTM':
         model = EfficientLSTM(efficientnet_name='efficientnet-b0',
                               seq_len=5,
@@ -1213,79 +1207,39 @@ def initialize_model(model_class, path_to_model=None, pretrained=True, epoch=Non
                               cnn_checkpoint=False,
                               gradcam_mode=gradcam_mode)
         temporal = True
-        if converged: epoch = 14
     elif model_class == 'meso4LSTM':
         model = Meso4LSTM(device=device, gradcam_mode=gradcam_mode)
         temporal = True
-        if converged: epoch = 24
     else:
         assert False, 'Unknown model class specified. Valid options are: \n' \
                       'effb0, effb3, meso4, effb3LSTM, effb0LSTM, meso4LSTM'
 
     if pretrained:
-        path_to_model_run = path_to_model + f'/{run}/'
-        model.load_state_dict(torch.load(path_to_model_run + f'checkpoint-{epoch}.pth.tar')['model'])
+        model.load_state_dict(torch.load(path_to_model + f'checkpoint-{epoch}.pth.tar')['model'])
     model = model.to(device)
     model.eval()
 
     return model, temporal
 
 
-def get_model_path(model_class, type_data=None):
-
-    assert type_data in ['clean_data', 'augmented_data', None], 'Invalid type of training data specified \n' \
-                                                          'Valid options are : \n' \
-                                                          '1. "clean_data" \n' \
-                                                          '2. "augmented_data'
+def get_model_path(model_class, model_name, pretrained=True):
 
     assert model_class in range(1, 5), 'Invalid model choice.'
 
     if model_class == 1:
         model_class = 'meso4'
 
-        if type_data is not None:
-            print(f'Loading MesoNet weights pretrained on {type_data.replace("_", " ")}.')
-
-            if type_data == 'clean_data':
-                model_name = 'meso4_do0.5_wd0.0001_lr0.001_dataclean'
-            else:
-                model_name = 'meso4_do0.5_wd0.001_lr0.001_datajoint'
-
     elif model_class == 2:
-        model_class = 'effb3'
-
-        if type_data is not None:
-            print(f'Loading EfficientNet weights pretrained on {type_data.replace("_", " ")}.')
-
-            if type_data == 'clean_data':
-                model_name = 'effb3_do0.5_wd0.0001_lr0.001_dataclean'
-            else:
-                model_name = 'effb3_do0.5_wd0.0001_lr0.001_datajoint'
+        model_class = 'effb0'
 
     elif model_class == 3:
         model_class = 'meso4LSTM'
-
-        if type_data is not None:
-            print(f'Loading MesoNet + LSTM weights pretrained on {type_data.replace("_", " ")}.')
-
-            if type_data == 'clean_data':
-                model_name = 'meso4lstm_do0.5_wd0.0001_lr0.0001_dataclean'
-            else:
-                model_name = 'meso4lstm_do0.5_wd0.0001_lr0.0001_datajoint'
-
     else:
         model_class = 'effb3LSTM'
 
-        if type_data is not None:
-            print(f'Loading EfficientNet + LSTM weights pretrained on {type_data.replace("_", " ")}.')
+    path_to_model = f'logs/checkpoints/{model_name}/'
+    if not pretrained and not os.path.exists(path_to_model):
+            os.makedirs(path_to_model)
 
-            if type_data == 'clean_data':
-                model_name = 'effb3lstm_do0.3_wd1e-05_lr0.0001_dataclean'
-            else:
-                model_name = 'effb3lstm_do0.3_wd1e-05_lr0.0001_datajoint'
+    return model_class, path_to_model
 
-    if type_data is not None:
-        path_to_model = f'logs/finalruns/checkpoints/{model_name}/'
-        return path_to_model, model_class
-    else:
-        return model_class

@@ -126,7 +126,7 @@ class FaceDetection:
 
 def only_read_CDF_from_path(files, labels_per_face, labels_per_file, label,
                             path_to_store_faces, path_to_store_faces_aug,  face_detection, csv_file_name,
-                            min_face_cutoff=64, temporal=False, log_plots=False):
+                            min_face_cutoff=64, temporal=False, log_plots=False, verbose=False):
 
     with torch.no_grad():
 
@@ -146,7 +146,8 @@ def only_read_CDF_from_path(files, labels_per_face, labels_per_file, label,
             else:
                 continue
 
-            print(f"[# extracted faces: {len(faces)}]")
+            if verbose:
+                print(f"[# extracted faces: {len(faces)}]")
 
             # augment face set
             faces_aug = add_noise_to_faces(faces)
@@ -184,7 +185,8 @@ def only_read_CDF_from_path(files, labels_per_face, labels_per_file, label,
                         print(f"Incomplete window indices at file {filename}")
                         pass
 
-                print(f"[# extracted face windows: {len(face_windows)}]")
+                if verbose:
+                    print(f"[# extracted face windows: {len(face_windows)}]")
 
                 faces = face_windows
                 faces_aug = face_windows_aug
@@ -250,8 +252,7 @@ def get_CDF_per_folder(path_to_data, path_to_store_faces, path_to_store_faces_au
                        min_face_cutoff=64, temporal=False, log_plots=False, verbose=False):
 
     videos = glob.glob(os.path.join(path_to_data, '*.mp4'))
-    if verbose:
-        print(f"Extracting  faces from {len(videos)} {label} files")
+    print(f"Extracting  faces from {len(videos)} {label} files")
 
     # for dev purposes. get only first 20 samples
     if sample:
@@ -271,7 +272,8 @@ def get_CDF_per_folder(path_to_data, path_to_store_faces, path_to_store_faces_au
                                                               csv_file_name,
                                                               min_face_cutoff,
                                                               temporal,
-                                                              log_plots)
+                                                              log_plots,
+                                                              verbose=verbose)
 
     return labels_per_face, labels_per_file
 
@@ -310,7 +312,7 @@ def store_face_tensors(faces, path_to_store, filename, temporal=False):
             save_image(im/255, path_to_store + f"{str(idx).zfill(3)}_{filename}.jpg")
 
 
-def store_labels(labels, path_to_store='Labels/', filename=''):
+def store_labels(labels, path_to_store='labels/', filename=''):
 
     if not os.path.exists(path_to_store):
         os.makedirs(path_to_store)
