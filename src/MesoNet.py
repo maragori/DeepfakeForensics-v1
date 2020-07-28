@@ -119,24 +119,21 @@ class Meso4LSTM(nn.Module):
 
             # reformat for feedforward through CNN
             cnn_input = x.view(batch * seq_len, c, h, w)
-            # print(f"CNN in: {cnn_input.shape}")
 
             # push through conv block
             cnn_out = self.cnn.extract_features(cnn_input)
-            # print(f"CNN out: {cnn_out.shape}")
 
             # reformat for feed through RNN
             rnn_in = cnn_out.view(batch, seq_len, -1)
-            # print(f"RNN in: {rnn_in.shape}")
 
+            # init LSTM
             h0 = torch.randn(self.seq_len, rnn_in.size(0), self.hidden_size).to(self.device)
             c0 = torch.randn(self.seq_len, rnn_in.size(0), self.hidden_size).to(self.device)
 
+            # push through LSTM
             rnn_out, (h_n, c_n), = self.rnn(rnn_in, (h0, c0))
-            # print(f"RNN out: {rnn_out.shape}")
-            # print(h_n.shape)
-            # print(h_c.shape)
 
+            # push through linear
             pred = self.linear(rnn_out[:, -1, :])
 
             return pred

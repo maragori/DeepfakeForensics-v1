@@ -296,7 +296,6 @@ class EfficientLSTM(nn.Module):
             self.effnet.load_state_dict(torch.load(self.cnn_checkpoint)['model'])
             print('Loaded own effnet checkpoint into CNN')
 
-
         # due to restrinctions, training on local machine: train only lstm and linear layers, freeze CNN layers
         #for p in self.effnet.parameters():
         #    p.requires_grad = False
@@ -309,15 +308,12 @@ class EfficientLSTM(nn.Module):
         else:
             assert False, f"Feature dimensions not yet implemented for model name {self.efficientnet_name}"
 
-        # tryout: single fully connected layer between feature output of CNN and first layer of LSTM
-
         self.pre_linear = nn.Sequential(
 
             nn.Dropout(self.dropout_rate),
             nn.Linear(feature_dim, self.hidden_size),
             nn.LeakyReLU(negative_slope=0.1),
         )
-
 
         # LSTM
         self.rnn = nn.LSTM(input_size=self.hidden_size,
@@ -347,30 +343,25 @@ class EfficientLSTM(nn.Module):
 
             # reformat for feedforward through CNN
             cnn_input = x.view(batch * seq_len, c, h, w)
-            # print(f"CNN in: {cnn_input.shape}")
 
             # push through conv block
             cnn_out = self.effnet.extract_features(cnn_input)
-            #print(f"CNN out: {cnn_out.shape}")
 
+            # reformat and push through intermediary dense layer
             pre_linear_in = cnn_out.flatten(start_dim=1)
-            #print(f"prelinear in: {pre_linear_in.shape}")
-
             pre_linear_out = self.pre_linear(pre_linear_in)
-            #print(f"prelinear out: {pre_linear_out.shape}")
 
             # reformat for feed through RNN
             rnn_in = pre_linear_out.view(batch, seq_len, -1)
-            #print(f"RNN in: {rnn_in.shape}")
 
+            # init LSTM
             h0 = torch.randn(self.seq_len, rnn_in.size(0), self.hidden_size).to(self.device)
             c0 = torch.randn(self.seq_len, rnn_in.size(0), self.hidden_size).to(self.device)
 
+            # push through LSTM
             rnn_out, (h_n, c_n), = self.rnn(rnn_in, (h0, c0))
-            # print(f"RNN out: {rnn_out.shape}")
-            # print(h_n.shape)
-            # print(h_c.shape)
 
+            # push through linear
             pred = self.linear(rnn_out[:, -1, :])
 
             return pred
