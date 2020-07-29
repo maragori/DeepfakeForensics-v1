@@ -22,6 +22,12 @@ Clone repository and set up environment by:
 <pre><code>$ pip install -r requirements.txt
 </code></pre>
 
+If the environment is not automatically available within Jupyter Notebook, please run
+
+<pre><code>$ python -m ipykernel install --user --name deepfakeforensics --display-name "Python DeepfakeForensics"
+</code></pre>
+
+to enable the option to select the environment kernel within the notebook under "Kernel".
 Created on Python 3.7 Win 10.
 
 ## Data
