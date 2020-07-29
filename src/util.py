@@ -689,7 +689,7 @@ def predict_files(model, path, device, temporal=False, title='ROC',
     model.eval()
 
     # Load face detector
-    face_detector = MTCNN(image_size=224, margin=0, keep_all=False, device=device, post_process=False).eval()
+    face_detector = MTCNN(image_size=224, margin=10, keep_all=False, device=device, post_process=False).eval()
     face_detection = FaceDetection(face_detector, device, n_frames=n_frames)
 
     fake_files = glob.glob(os.path.join(path + 'fake/', '*.mp4'))
@@ -789,7 +789,7 @@ def predict_clip_folder(model, files, label, face_detection,
                 continue
 
             if verbose:
-                print(f"[Extracted {len(faces)} faces for file {filename}]")
+                #print(f"[Extracted {len(faces)} faces for file {filename}]")
                 print(f"Label: {label}")
 
             # normalize
@@ -826,8 +826,11 @@ def predict_clip_folder(model, files, label, face_detection,
             faces = torch.cat(faces)
             pred, fake_probs = predict_single_file(model, faces, agg, device, verbose)
 
+            # check if correct prediction for plotting color
+            correct = True if round(pred) == single_label else False
+
             if plot_ims:
-                plot_sample_images(faces, title=fake_probs, temporal=temporal)
+                plot_sample_images(faces, title=fake_probs, temporal=temporal, correct=correct)
 
             predictions.append(pred)
             labels.append(single_label)
@@ -1086,7 +1089,7 @@ def smooth(x, smoothing_steps):
     return smoothed
 
 
-def plot_sample_images(ims, title=None, temporal=False):
+def plot_sample_images(ims, title=None, temporal=False, correct=None):
 
     title = torch.flatten(title).tolist()
     title = [np.round(prob, 2) for prob in title]
@@ -1121,6 +1124,9 @@ def plot_sample_images(ims, title=None, temporal=False):
             ax.set_title(title[idx])
             ax.axis('off')
 
+    background_color = 'green' if correct else 'red'
+    fig.patch.set_facecolor(background_color)
+    fig.patch.set_alpha(0.3)
     plt.tight_layout()
     plt.show()
 
