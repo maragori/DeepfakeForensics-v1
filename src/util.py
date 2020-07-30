@@ -532,13 +532,12 @@ def run_training(model,
                     iter_val_f1_list.append([global_iter, iter_val_f1])
 
                     # for LR plateau reduce: calculate mean val loss 2 times per epoch, starting at epoch 10
-                    if reduce_lr_on_plateau and iter_id % int(num_train_iters_per_epoch/2) == 0 and epoch > 9:
+                    if reduce_lr_on_plateau and iter_id % int(num_train_iters_per_epoch/2) == 0 and epoch >= 9:
                         mean_val_loss_last_quarter = np.asanyarray(iter_val_loss_list[-int(num_val_iters_per_epoch/2):])[:, 1].mean()
                         scheduler.step(mean_val_loss_last_quarter)
 
                     # free cache to save memory
                     del fake_prob, val_loss
-                    torch.cuda.empty_cache()
 
                 # set back to train mode
                 model.train()
